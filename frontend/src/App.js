@@ -309,7 +309,9 @@ const App = () => {
 
   const handleItemDoubleClick = (id) => {
     setSelectedItemId(id);
+    console.log(selectedItemId)
     const selectedItem = items.find((item) => item.id === id);
+    console.log(selectedItem.style.fontSize)
     if (selectedItem) {
       setNewContent(selectedItem.content); 
       setNewFontSize(selectedItem.style.fontSize || "16px");
@@ -386,6 +388,7 @@ const App = () => {
         return `<div id="${item.id}" style="${itemStyleString}; padding: 10px; bottom: 10px;">${item.content}</div>`;
       })
       .join("\n");
+
 
     return `<div id="parent" style="${parentStyleString}">
     ${childrenHTML}

@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const dotenv = require("dotenv");
 const cors = require("cors"); // Import CORS
 const emailRoutes = require("./src/routes/emailTemplateRoute");
 
@@ -10,11 +11,15 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // Middleware
+dotenv.config();
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files for uploaded images
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-// Set up multer for image file upload
+
+// Set up multer for image file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "./uploads/");
@@ -26,22 +31,23 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // MongoDB connection
-mongoose.connect("mongodb+srv://20co49:BUQzVuJSWHGyfgz0@cluster0.n5ejt.mongodb.net/Test", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+mongoose.connect(process.env.MONGO_URL, { dbName: "Test" })
   .then(() => console.log("MongoDB connected to Test database"))
-  .catch(err => console.log("MongoDB connection error:", err));
+  .catch(err => console.error("MongoDB connection error:", err));
 
 // Routes
 app.use("/api/emails", emailRoutes);
 
 // API to get the layout HTML file
 app.get("/getEmailLayout", (req, res) => {
-  fs.readFile(path.join(__dirname, "views", "layout.html"), "utf-8", (err, data) => {
+  const layoutPath = path.join(__dirname, "views", "layout.html");
+
+  fs.readFile(layoutPath, "utf-8", (err, data) => {
     if (err) {
-      return res.status(500).send("Error reading HTML layout");
+      console.error("Error reading layout.html:", err);
+      return res.status(500).json({ error: "Error reading HTML layout" });
     }
+
     res.status(200).send(data);
   });
 });
