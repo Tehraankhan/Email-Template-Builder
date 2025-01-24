@@ -16,7 +16,6 @@ import {
 import { arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-
 // DraggableItem component
 const DraggableItem = ({ id, children, onDoubleClick, style, isSelected }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -74,9 +73,7 @@ const data = [
 ];
 
 const App = () => {
-
-
-  const [loading ,setLoading]=useState("")
+  const [loading, setLoading] = useState("");
   const [items, setItems] = useState();
 
   const [parentStyle, setParentStyle] = useState();
@@ -91,7 +88,7 @@ const App = () => {
           },
         }
       );
-  
+
       const response2 = await axios.get(
         "https://email-template-builder-backend-2fm4.onrender.com/api/emails/getTemplate",
         {
@@ -100,49 +97,45 @@ const App = () => {
           },
         }
       );
-  
-  
-  
+
       const originalTemplate = response2.data; // Fetch and store the original template
-      console.log(response.data[0].sections)
-  
-      const { children: initialItems, parentStyle: parsedParentStyle } = parseTemplate(originalTemplate,response.data[0].sections);
-  
+      console.log(response.data[0].sections);
+
+      const { children: initialItems, parentStyle: parsedParentStyle } =
+        parseTemplate(originalTemplate, response.data[0].sections);
+
       // Update the state for items and parent style
       setItems(initialItems);
       setParentStyle(parsedParentStyle);
       setLoading(false);
-                
-      
-      const fullUrl =  response.data[0].sections[2].src
-      const fileName = fullUrl.split("/").pop(); 
 
-      console.log(fileName)
-  
-     
+      const fullUrl = response.data[0].sections[2].src;
+      const fileName = fullUrl.split("/").pop();
+
+      console.log(fileName);
+
       setImagePreview({
         url: fullUrl,
         fileName: fileName,
       });
       items[2].src = fullUrl;
-      setImage(fullUrl)
-
+      setImage(fullUrl);
     } catch (error) {
-      setLoading(false); 
-      console.error("Error fetching data:", error); 
+      setLoading(false);
+      console.error("Error fetching data:", error);
     }
   };
-  
+
   useEffect(() => {
     fetchDataAndTemplate();
-  },[]);
+  }, []);
 
   const parseTemplate = (template, sections, image) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(template, "text/html");
-  
+
     const elements = [...doc.body.children];
-  
+
     // Extract parent style
     const parentElement = elements.find((el) => el.id === "parent");
     const parentStyle = parentElement
@@ -151,67 +144,75 @@ const App = () => {
           return styleObj;
         }, {})
       : {};
-  
+
     // Parse child elements
     const children = parentElement ? [...parentElement.children] : elements;
-  
+
     const parsedChildren = children.map((el) => {
       // Match section from response
       const matchedSection = sections.find((section) => section.id === el.id);
-  
+
       const parsedElement = {
-        id: el.id || `${el.tagName.toLowerCase()}-${Math.random().toString(36).substring(2, 8)}`,
+        id:
+          el.id ||
+          `${el.tagName.toLowerCase()}-${Math.random()
+            .toString(36)
+            .substring(2, 8)}`,
         type: matchedSection?.type || el.tagName.toLowerCase(),
         content: matchedSection?.content || el.textContent.trim(),
-        style: matchedSection?.style || Array.from(el.style).reduce((styleObj, prop) => {
-          styleObj[prop] = el.style.getPropertyValue(prop);
-          return styleObj;
-        }, {}),
+        style:
+          matchedSection?.style ||
+          Array.from(el.style).reduce((styleObj, prop) => {
+            styleObj[prop] = el.style.getPropertyValue(prop);
+            return styleObj;
+          }, {}),
       };
-  
+
       // Special handling for <div> elements with an <img> tag
       if (el.id === "image" || matchedSection?.type === "image") {
         const imgElement = el.querySelector("img"); // Locate <img> tag
         parsedElement.type = "img"; // Change type to 'img'
-        parsedElement.src = matchedSection?.src || imgElement?.src || image || ""; // Use matchedSection src or fallback
-        parsedElement.style = matchedSection?.style || (imgElement
-          ? Array.from(imgElement.style).reduce((styleObj, prop) => {
-              styleObj[prop] = imgElement.style.getPropertyValue(prop);
-              return styleObj;
-            }, {})
-          : {});
+        parsedElement.src =
+          matchedSection?.src || imgElement?.src || image || ""; // Use matchedSection src or fallback
+        parsedElement.style =
+          matchedSection?.style ||
+          (imgElement
+            ? Array.from(imgElement.style).reduce((styleObj, prop) => {
+                styleObj[prop] = imgElement.style.getPropertyValue(prop);
+                return styleObj;
+              }, {})
+            : {});
       }
-  
+
       return parsedElement;
     });
-  
+
     return { children: parsedChildren, parentStyle };
   };
-  
-  
 
   const [image, setImage] = useState(null);
-  const [imagePreview,setImagePreview]=useState({
-    url:"",
-    fileName:""
-  })
-  const [originalTemplate,setoriginalTemplate]=useState("")
-
+  const [imagePreview, setImagePreview] = useState({
+    url: "",
+    fileName: "",
+  });
+  const [originalTemplate, setoriginalTemplate] = useState("");
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
-  
+    
+
     // Check if a file is selected
     if (!file) {
       alert("Please select an image.");
       return;
     }
-  
+
     // Create a FormData object to send the image to the server
     const formData = new FormData();
     formData.append("image", file);
-  
+
     try {
+      setIsSaving(true)
       // Send the image to the server using Axios
       const response = await axios.post(
         "https://email-template-builder-backend-2fm4.onrender.com/api/emails/uploadImage",
@@ -222,46 +223,47 @@ const App = () => {
           },
         }
       );
-  
+
       // Extract the full URL and file name from the server response
       const relativeUrl = response.data.imageUrl; // e.g., "/uploads/1737624684544.png"
       const fullUrl = `https://email-template-builder-backend-2fm4.onrender.com${relativeUrl}`;
       const fileName = relativeUrl.split("/").pop(); // Extracts "1737624684544.png"
 
-      console.log(fileName)
-  
+      console.log(fileName);
+
       // Update states with the full URL and file name
       setImage(fullUrl);
       setImagePreview({
         url: fullUrl,
         fileName: fileName,
       });
-  
+
       // Update items array
-      
-  
+
       const updatedItems = items.map((item) =>
         item.id === "image" ? { ...item, src: fullUrl } : item
       );
-  
+
       // Update the items state
       setItems(updatedItems);
-  
+
       alert("Image uploaded successfully!");
+      setIsSaving(false)
     } catch (error) {
       console.error("Error uploading image:", error);
       alert("Error uploading image. Please try again.");
+      setIsSaving(false)
     }
   };
 
   const UpdateDataAndTemplate = async () => {
     try {
       const htmlCode = generateHTMLCode(); // Assuming this function generates your HTML code
-      console.log(htmlCode)
-      console.log(items)
+      console.log(htmlCode);
+      console.log(items);
       const response = await axios.put(
         "https://email-template-builder-backend-2fm4.onrender.com/api/emails/updateData",
-        { sections:items }, // Correctly passing an object instead of JSON.stringify
+        { sections: items }, // Correctly passing an object instead of JSON.stringify
         {
           headers: {
             "Content-Type": "application/json",
@@ -270,7 +272,7 @@ const App = () => {
       );
       const response2 = await axios.put(
         "https://email-template-builder-backend-2fm4.onrender.com/api/emails/updateTemplate",
-        { html:htmlCode }, // Correctly passing an object instead of JSON.stringify
+        { html: htmlCode }, // Correctly passing an object instead of JSON.stringify
         {
           headers: {
             "Content-Type": "application/json",
@@ -278,14 +280,11 @@ const App = () => {
         }
       );
 
-  
       // Access response data correctly
-
     } catch (error) {
       console.error("Error updating template:", error.message);
     }
   };
-  
 
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [newContent, setNewContent] = useState("");
@@ -293,8 +292,7 @@ const App = () => {
   const [newColor, setNewColor] = useState("#000");
   const [newTextAlign, setNewTextAlign] = useState("left");
   const [borderColor, setBorderColor] = useState("");
-
- 
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleDragEnd = (event) => {
     const { active, over } = event;
@@ -309,11 +307,11 @@ const App = () => {
 
   const handleItemDoubleClick = (id) => {
     setSelectedItemId(id);
-    console.log(selectedItemId)
+    console.log(selectedItemId);
     const selectedItem = items.find((item) => item.id === id);
-    console.log(selectedItem.style.fontSize)
+    console.log(selectedItem.style.fontSize);
     if (selectedItem) {
-      setNewContent(selectedItem.content); 
+      setNewContent(selectedItem.content);
       setNewFontSize(selectedItem.style.fontSize || "16px");
       setNewColor(selectedItem.style.color || "#000");
       setNewTextAlign(selectedItem.style.textAlign || "left");
@@ -363,7 +361,6 @@ const App = () => {
     str.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
 
   const generateHTMLCode = () => {
-
     const parentStyleString = Object.entries(parentStyle)
       .map(([key, value]) => `${camelCaseToKebabCase(key)}: ${value}`)
       .join("; ");
@@ -389,62 +386,66 @@ const App = () => {
       })
       .join("\n");
 
-
     return `<div id="parent" style="${parentStyleString}">
     ${childrenHTML}
   </div>`;
- 
+  };
 
-};
+  const handleDownloadHtml = async () => {
+    try {
+      const response = await axios.post(
+        "https://email-template-builder-backend-2fm4.onrender.com/api/emails/renderAndDownloadTemplate",
+        {
+          responseType: "blob", // Important for handling file responses
+        }
+      );
 
+      // Create a download link for the file
+      const blob = new Blob([response.data], { type: "text/html" });
+      const url = window.URL.createObjectURL(blob);
 
+      // Create a temporary link element
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "emailTemplate.html"; // File name for download
+      document.body.appendChild(a);
 
+      // Trigger the download
+      a.click();
 
-const handleDownloadHtml = async () => {
-  try {
-    const response = await axios.post(
-      'https://email-template-builder-backend-2fm4.onrender.com/api/emails/renderAndDownloadTemplate',
-      {
-        responseType: 'blob', // Important for handling file responses
-      }
-    );
+      // Clean up
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading the HTML:", error);
+      alert("Failed to download the file. Please try again.");
+    }
+  };
 
-    // Create a download link for the file
-    const blob = new Blob([response.data], { type: 'text/html' });
-    const url = window.URL.createObjectURL(blob);
-
-    // Create a temporary link element
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'emailTemplate.html'; // File name for download
-    document.body.appendChild(a);
-
-    // Trigger the download
-    a.click();
-
-    // Clean up
-    a.remove();
-    window.URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error('Error downloading the HTML:', error);
-    alert('Failed to download the file. Please try again.');
-  }
-};
-
-
-  useEffect(()=>{
-    UpdateDataAndTemplate()
-
-  },[items])
+  useEffect(() => {
+    UpdateDataAndTemplate();
+  }, [items]);
   return (
-
-
-
-
-
-
-
     <div style={{ display: "flex", height: "100vh" }}>
+      {isSaving && (
+        <div
+          style={{
+            position: "absolute",
+            top: "20px",
+            right: "20px",
+            width: "200px",
+            padding: "10px",
+            borderRadius: "6px",
+            border: "1px solid #ccc",
+            boxSizing: "border-box",
+            backgroundColor: "#fff",
+            textAlign: "center",
+            
+          }}
+        >
+          Saving.....
+        </div>
+      )}
       {/* Left Section (Input Fields for Editing Content and Style) */}
       <div
         style={{
@@ -528,10 +529,9 @@ const handleDownloadHtml = async () => {
               style={{
                 flex: 1,
                 padding: "10px",
-
+                textAlign: "center",
                 fontFamily: "'Courier New', monospace",
                 fontSize: "14px",
-                textAlign: "center",
               }}
             >
               {newColor.toUpperCase()} {/* Displaying HEX value */}
@@ -610,56 +610,62 @@ const handleDownloadHtml = async () => {
 
         {/* Image Upload */}
         <div style={{ marginBottom: "20px" }}>
-  {/* Choose File Button */}
-  <h4 style={{ marginBottom: "10px", color: "#555" }}>Upload Image</h4>
-  <input
-    type="file"
-    accept="image/*"
-    onChange={handleImageUpload}
-    style={{
-      width: "100%",
-      padding: "10px",
-      borderRadius: "6px",
-      border: "1px solid #ccc",
-      boxSizing: "border-box",
-      backgroundColor: "#fff",
-      marginBottom: "10px",
-    }}
-  />
+          {/* Choose File Button */}
+          <h4 style={{ marginBottom: "10px", color: "#555" }}>Upload Image</h4>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            style={{
+              width: "100%",
+              padding: "10px",
+              borderRadius: "6px",
+              border: "1px solid #ccc",
+              boxSizing: "border-box",
+              backgroundColor: "#fff",
+              marginBottom: "10px",
+            }}
+          />
 
-  {/* Image Preview and File Name on the Same Line */}
-  {imagePreview.url && (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        marginTop: "10px",
-        padding: "10px",
-        border: "1px solid #ddd",
-        borderRadius: "6px",
-        backgroundColor: "#f9f9f9",
-      }}
-    >
-      {/* Uploaded Image */}
-      <img
-        src={imagePreview.url}
-        alt="Uploaded"
-        style={{
-          width: "50px",
-          height: "50px",
-          objectFit: "cover",
-          borderRadius: "6px",
-          marginRight: "10px",
-        }}
-      />
+          {/* Image Preview and File Name on the Same Line */}
+          {imagePreview.url && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginTop: "10px",
+                padding: "10px",
+                border: "1px solid #ddd",
+                borderRadius: "6px",
+                backgroundColor: "#f9f9f9",
+              }}
+            >
+              {/* Uploaded Image */}
+              <img
+                src={imagePreview.url}
+                alt="Uploaded"
+                style={{
+                  width: "50px",
+                  height: "50px",
+                  objectFit: "cover",
+                  borderRadius: "6px",
+                  marginRight: "10px",
+                }}
+              />
 
-      {/* File Name */}
-      <span style={{ color: "#333", fontSize: "14px", wordBreak: "break-word" }}>
-        {imagePreview.fileName}
-      </span>
-    </div>
-  )}
-</div>
+              {/* File Name */}
+              <span
+                style={{
+                  color: "#333",
+                  fontSize: "14px",
+                  wordBreak: "break-word",
+                }}
+              >
+                {imagePreview.fileName}
+              </span>
+            </div>
+          )}
+        </div>
 
         {/* Save Button */}
         <button
@@ -689,54 +695,51 @@ const handleDownloadHtml = async () => {
           margin: "auto",
         }}
       >
-        
-
-        {
-  loading || !items || items.length === 0 ? (
-    <>
-      <p>loading...</p>
-    </>
-  ) : (
-    <>
-      <div style={parentStyle}>
-        <DndContext onDragEnd={handleDragEnd}>
-          <SortableContext items={items} strategy={verticalListSortingStrategy}>
-            {items.map((item) => (
-              <DraggableItem
-                key={item.id}
-                id={item.id}
-                style={item.style}
-                isSelected={item.id === selectedItemId}
-                onDoubleClick={() => handleItemDoubleClick(item.id)}
-              >
-                {item.type === "img" ? (
-                  <img
-                    src={item.src || image}
-                    alt="preview"
-                    style={item.style}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      ...item.style,
-                      textAlign: item.style.textAlign ,
-                    }}
-                  >
-                    {item.content}
-                  </div>
-                )}
-              </DraggableItem>
-            ))}
-          </SortableContext>
-        </DndContext>
+        {loading || !items || items.length === 0 ? (
+          <>
+            <p>loading...</p>
+          </>
+        ) : (
+          <>
+            <div style={parentStyle}>
+              <DndContext onDragEnd={handleDragEnd}>
+                <SortableContext
+                  items={items}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {items.map((item) => (
+                    <DraggableItem
+                      key={item.id}
+                      id={item.id}
+                      style={item.style}
+                      isSelected={item.id === selectedItemId}
+                      onDoubleClick={() => handleItemDoubleClick(item.id)}
+                    >
+                      {item.type === "img" ? (
+                        <img
+                          src={item.src || image}
+                          alt="preview"
+                          style={item.style}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            ...item.style,
+                            textAlign: item.style.textAlign,
+                          }}
+                        >
+                          {item.content}
+                        </div>
+                      )}
+                    </DraggableItem>
+                  ))}
+                </SortableContext>
+              </DndContext>
+            </div>
+          </>
+        )}
       </div>
-    </>
-  )
-}
-
-        </div>
-      </div>
-   
+    </div>
   );
 };
 
