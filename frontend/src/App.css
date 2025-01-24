@@ -1,0 +1,57 @@
+.App {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+h2 {
+  text-align: center;
+}
+
+.columns {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.column {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.email-template-preview {
+  background-color: #f9f9f9;
+}
+
+.draggable-section {
+  padding: 10px;
+  border: 1px dashed #ccc;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.editable-section-container {
+  padding: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  font-size: 16px;
+}
+
+input[type="color"],
+input[type="number"] {
+  margin: 10px 0;
+}
+
+input[type="color"] {
+  width: 50px;
+}
+
+input[type="number"] {
+  width: 80px;
+}
