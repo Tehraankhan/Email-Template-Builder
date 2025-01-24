@@ -84,7 +84,7 @@ const App = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/emails/getTemplateData",
+        "https://email-template-builder-backend-2fm4.onrender.com/api/emails/getTemplateData",
         {
           headers: {
             "Content-Type": "multipart/form-data",
@@ -93,7 +93,7 @@ const App = () => {
       );
   
       const response2 = await axios.get(
-        "http://localhost:5000/api/emails/getTemplate",
+        "https://email-template-builder-backend-2fm4.onrender.com/api/emails/getTemplate",
         {
           headers: {
             "Content-Type": "multipart/form-data",
@@ -214,7 +214,7 @@ const App = () => {
     try {
       // Send the image to the server using Axios
       const response = await axios.post(
-        "http://localhost:5000/api/emails/uploadImage",
+        "https://email-template-builder-backend-2fm4.onrender.com/api/emails/uploadImage",
         formData,
         {
           headers: {
@@ -225,7 +225,7 @@ const App = () => {
   
       // Extract the full URL and file name from the server response
       const relativeUrl = response.data.imageUrl; // e.g., "/uploads/1737624684544.png"
-      const fullUrl = `http://localhost:5000${relativeUrl}`;
+      const fullUrl = `https://email-template-builder-backend-2fm4.onrender.com${relativeUrl}`;
       const fileName = relativeUrl.split("/").pop(); // Extracts "1737624684544.png"
 
       console.log(fileName)
@@ -260,7 +260,7 @@ const App = () => {
       console.log(htmlCode)
       console.log(items)
       const response = await axios.put(
-        "http://localhost:5000/api/emails/updateData",
+        "https://email-template-builder-backend-2fm4.onrender.com/api/emails/updateData",
         { sections:items }, // Correctly passing an object instead of JSON.stringify
         {
           headers: {
@@ -269,7 +269,7 @@ const App = () => {
         }
       );
       const response2 = await axios.put(
-        "http://localhost:5000/api/emails/updateTemplate",
+        "https://email-template-builder-backend-2fm4.onrender.com/api/emails/updateTemplate",
         { html:htmlCode }, // Correctly passing an object instead of JSON.stringify
         {
           headers: {
@@ -403,7 +403,7 @@ const App = () => {
 const handleDownloadHtml = async () => {
   try {
     const response = await axios.post(
-      'http://localhost:5000/api/emails/renderAndDownloadTemplate',
+      'https://email-template-builder-backend-2fm4.onrender.com/api/emails/renderAndDownloadTemplate',
       {
         responseType: 'blob', // Important for handling file responses
       }
